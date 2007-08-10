@@ -1,0 +1,170 @@
+*** 
+NEOPOP
+
+www.tehskeen.com
+***
+ø°º–––————————————————————————————————————————————————————————————————————×·.
+°Ø¨–;         -×× description ××-
+·/       –––––————   ––––––––––   ––—————––––––——   ——––––––   –––––—————
+
+  NeoPop emulates the SNK NeoGeo Pocket handheld console. It is based on NeoPop/SDL
+  by neopopUK and ported to the Nintendo GameCube by The "Genesis Plus" Team.
+  It has been converted from a PC based platform to run on the GameCube's
+  proprietary PPC Gekko processor and features customized code to give you the best
+  gaming experience possible. See changelog.txt for the whole history.
+
+
+  ... Features ...
+
+   • NeoGeo Pocket Color Emulation with sound
+   • 1-2 Player Support
+   • FreezeState suport (save & load)
+   • Load a game from SDCARD or DVD (4.7GB support for Wii users)
+   • Zipped rom support
+   • Load/Save FreezeState files (compressed) from/to Memory Card & SDCARD
+   • SDLOAD or IPL reboot option
+
+
+ ø°º–––————————————————————————————————————————————————————————————————————×·.
+°Ø¨–;         ×-× installation ×-×
+·/       –––––————   ––––––––––   ––—————––––––——   ——––––––   –––––—————
+
+The emulator is provided as a .dol which is a Gamecube Executable. You only need to load and run
+the DOL on your GC or WII (Gamecube Pad needed) using various methods (Bootable DVD, SDLOAD,...)
+If you have no idea on how to load&run a DOL, please go here on follow the available guides:
+http://modyawii.tehskeen.com/  (Booting Homebrew Section)
+
+SDCARD users should create a directory named "neopop" at the root of the SDCARD.
+Inside this directory, you have to create then a subdirectory named "roms" to put all your roms.
+You should also create a subdirectory named "saves" where SRAM and FreezeState files will be saved.
+
+If using a DVD to load the roms, the format of the image you burned must be ISO9960
+or you won't be able to read from it. The maximal readable size is 1.35GB for Gamecube users
+and 4.7GB for Wii users.
+
+IMPORTANT: When putting roms either on DVD or SDCARD, it is recommended to use subdirectories as there is 
+	   a limit of 1000 files per directory.
+
+
+
+ ø°º–––————————————————————————————————————————————————————————————————————×·.
+°Ø¨–;         -×× usage -××
+·/       –––––————   ––––––––––   ––—————––––––——   ——––––––   –––––—————
+
+  You'll start off with the main introduction screen and after pressing "A"
+  you will be at the main menu. Note that at anytime during gameplay you can
+  return to the main menu by tapping on that little Z button (you know, the
+  one on your controller).
+
+  Of course it's a menu so you have yourself a few things to choose from.
+  So here's a list and what they do.
+
+
+  PLAY GAME:    Takes you into or back to the game.
+  -----------------------------------------------------------------------------------
+
+
+  RESET GAME:   Simulate pressing reset on the emulator
+  -----------------------------------------------------------------------------------
+
+
+  LOAD NEW GAME:
+  -----------------------------------------------------------------------------------
+
+    * Load from DVD:
+    ****************
+
+       A DVD browser is displayed. Navigate and select your ROM from here.
+       IMPORTANT: Your DVD must be in ISO9660 format
+
+    * Load from SDCARD:
+    *******************
+
+       A SDCARD browser is displayed. Navigate and select your ROM from here.
+       IMPORTANT: To load roms from SDCARD, you have to use a SDCARD adapter in MC SlotA
+		  On the SDCARD, roms must be initially placed in the /neopop/roms/ directory
+
+   In both cases, the maximum number of files per directory (DVD or SDCARD) is 1000.
+   It is *recommended* to use subdirectories.
+   Pressing B will make you going up one directory.
+
+
+
+  EMULATOR OPTIONS:
+  -----------------------------------------------------------------------------------
+
+      X and Y are to try to compensate for TVs with high overscan, or if
+	you just want to play on a smaller area.
+
+
+
+  SAVESTATE MANAGER:
+  -----------------------------------------------------------------------------------
+    
+  STATE is the actual state of your game. It is independant from any in-game save support 
+  so that you can restart the game exactly where you previously stop playing.
+  
+  You can now choose the device type and location.
+  Be sure to set this according to your system configuration before saving/loading files.
+
+  . Device: Let you choose the device to use: SDCARD or MCARD
+  . SLOT: Let you choose which MC slot to use for the device
+
+   IMPORTANT:
+   
+   1/ when using NGC Memory Card in SLOTA, some mounting errors may occur. In this case,
+      remove and insert the Memory Card again before trying to save/load anything.
+
+   2/ when using SDCARD, the directory /neopop/saves must exist
+
+   3/ for Wii users, please note that the SD slot can *NOT* be acceeded so use a SD-Adapter in a MC SLot
+
+
+
+  STOP DVD MOTOR :  Stop the DVD motor and the disc from spinning during playtime
+  -----------------------------------------------------------------------------------
+
+
+  SYSTEM REBOOT:
+  -----------------------------------------------------------------------------------
+
+      For users of SDLoad or PSOLoad, you can call this to go back.
+      For others, this will reboot the system
+
+
+ ø°º–––————————————————————————————————————————————————————————————————————×·.
+°Ø¨–;         ××- develloper notes ××-
+·/       –––––————   ––––––––––   ––—————––––––——   ——––––––   –––––—————
+
+According to the GNU status of this project, the sourcecode MUST be included in any binary releases you made.
+To recompile the sourcecode, you will need to have installed:
+ . DevkitPPC environment
+ . libOGC last sources
+ 
+You also need to replace the gu_psasm.S file which is located in the /LIBBOGC directory (from the root of libogc source directory)
+with the one included in this release and then recompile/reinstall libogc.
+
+If you have no idea on how to compile DOLs , please refer to this thread:
+http://www.tehskeen.com/forums/showthread.php?t=2968.
+
+
+ ø°º–––————————————————————————————————————————————————————————————————————×·.
+°Ø¨–;         ××- credits ××-
+·/       –––––————   ––––––––––   ––—————––––––——   ——––––––   –––––—————
+
+  coding        -   the "genesis plus team"
+                    • softdev
+                    • honkeykong
+                    • markcube
+  
+  additionnal code and support -  eke-eke
+
+  graphics      -   brakken
+
+  documentation -   softdev (chm)
+                    brakken (user d0x)
+		    eke-eke (rewrite and changelog updates)
+
+
+
+×××-–—————————————————————————————————-———————————————————————————————————-×××
