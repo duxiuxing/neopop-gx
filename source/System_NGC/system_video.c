@@ -17,9 +17,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 #include <neopop.h>
-#include <ogcsys.h>
-#include <sdcard.h>
+#include <fat.h>
 #include <font.h>
+
+#ifdef HW_RVL
+#include <wiiuse/wpad.h>
+#include <di/di.h>
+#endif
 
 void genpal ();
 
@@ -41,12 +45,37 @@ int vwidth, vheight, oldvwidth, oldvheight;
 #define HASPECT 76
 #define VASPECT 54
 
+extern int usleep();
+
+//Console Version Type Helpers
+#define GC_CPU_VERSION01 0x00083214
+#define GC_CPU_VERSION02 0x00083410
+#ifndef mfpvr
+#define mfpvr()  ({unsigned int rval; asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+#endif
+#define is_gamecube() (((mfpvr() == GC_CPU_VERSION01)||((mfpvr() == GC_CPU_VERSION02))))
+
+typedef struct {
+  u8   mid;         //Manufacturer ID
+  char oid[2];      //OEM/Application ID
+  char pnm[5];      //Product Name
+  u8   prv;         //product version 0001 0001 = 1.1
+  u32  psn;         //product serial number
+  u16  mdt;         //bottom 4 bits are month, 8 bits above is year since 2000
+  u8   unk;
+} CIDdata __attribute__((aligned(32)));
+
+void __SYS_ReadROM(void *buf,u32 len,u32 offset);
+char IPLInfo[256] __attribute__((aligned(32)));
+
+
+
 /* New texture based scaler */
 typedef struct tagcamera
 {
-  Vector pos;
-  Vector up;
-  Vector view;
+  guVector pos;
+  guVector up;
+  guVector view;
 } camera;
 
 /*** Square Matrix
@@ -69,6 +98,10 @@ static camera cam = { {0.0F, 0.0F, 0.0F},
 {0.0F, 0.5F, 0.0F},
 {0.0F, 0.0F, -0.5F}
 };
+
+static void ProperScanPADS() { 
+	PAD_ScanPads(); 
+}
 
 
 /****************************************************************************
@@ -96,6 +129,7 @@ vbgetback (void *arg)
       VIDEO_WaitVSync ();	 /**< Wait for video vertical blank */
       LWP_SuspendThread (vbthread);
     }
+    return 0;
 }
 
 
@@ -160,8 +194,7 @@ draw_init (void)
   GX_SetTexCoordGen (GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 
   GX_InvalidateTexAll ();
-  GX_InitTexObj (&texobj, texturemem, vwidth, vheight, GX_TF_RGB565,
-		 GX_CLAMP, GX_CLAMP, GX_FALSE);
+  GX_InitTexObj (&texobj, texturemem, vwidth, vheight, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
 }
 
 static void
@@ -216,11 +249,8 @@ StartGX (void)
   GX_SetScissor (0, 0, vmode->fbWidth, vmode->efbHeight);
   GX_SetDispCopySrc (0, 0, vmode->fbWidth, vmode->efbHeight);
   GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight);
-  GX_SetCopyFilter (vmode->aa, vmode->sample_pattern, GX_TRUE,
-		    vmode->vfilter);
-  GX_SetFieldMode (vmode->field_rendering,
-		   ((vmode->viHeight ==
-		     2 * vmode->xfbHeight) ? GX_ENABLE : GX_DISABLE));
+  GX_SetCopyFilter (vmode->aa, vmode->sample_pattern, GX_TRUE, vmode->vfilter);
+  GX_SetFieldMode (vmode->field_rendering, ((vmode->viHeight == 2 * vmode->xfbHeight) ? GX_ENABLE : GX_DISABLE));
   GX_SetPixelFmt (GX_PF_RGB8_Z24, GX_ZC_LINEAR);
   GX_SetCullMode (GX_CULL_NONE);
   GX_CopyDisp (xfb[whichfb ^ 1], GX_TRUE);
@@ -239,26 +269,60 @@ StartGX (void)
  *
  * This function MUST be called at startup.
  ****************************************************************************/
-u8 isWII = 0;
-extern int dvd_inquiry();
+//u8 isWII = 0;
+//extern int dvd_inquiry();
 
 void
 InitGCVideo ()
 {
-
-  /*
-   * Before doing anything else under libogc,
-   * Call VIDEO_Init
-   */
+#ifdef HW_RVL
+  /* initialize Wii DVD interface first */
+  DI_Init();
+#endif
+   
+   // Before doing anything else under libogc, Call VIDEO_Init
   VIDEO_Init ();
   PAD_Init ();
 
-  /*
-   * Reset the video mode
-   * This is always set to 60hz
-   * Whether your running PAL or NTSC
-   */
-  vmode = &TVNtsc480IntDf;
+#ifndef HW_RVL
+   int retPAD = 0;
+   while(retPAD <= 0) { retPAD = PAD_ScanPads(); usleep(100); }
+#endif
+
+   __SYS_ReadROM(IPLInfo,256,0);                           // Read IPL tag
+    
+   // Get the IPL TAG to set video mode then :
+   // This is always set to 60hz Whether your running PAL or NTSC
+   //   - Wii has no IPL tags for "PAL" so let libOGC figure out the video mode
+   if(!is_gamecube()) {
+     vmode = VIDEO_GetPreferredMode(NULL);                 //Last mode used
+   }
+   else {
+      // Gamecube, determine based on IPL
+      // If Trigger L detected during bootup, force 480i safemode
+      // for Digital Component cable for SDTV compatibility.
+      if(VIDEO_HaveComponentCable() && !(PAD_ButtonsDown(0) & PAD_TRIGGER_L)) {
+        if((strstr(IPLInfo,"PAL")!=NULL)) {
+          vmode = &TVPal576ProgScale;                      //Progressive 576p60hz
+        }
+        else {
+          vmode = &TVNtsc480Prog;                          //Progressive 480p
+        }
+     }
+     else {
+        //try to use the IPL region
+        if(strstr(IPLInfo,"PAL")!=NULL) {
+          vmode = &TVPal576IntDfScale;                     //Interlaced 576i60hz
+        }
+        else if(strstr(IPLInfo,"NTSC")!=NULL) {
+          vmode = &TVNtsc480IntDf;                         //Interlaced 480i
+        }
+        else {
+          vmode = VIDEO_GetPreferredMode(NULL);            //Last mode used
+        }
+     }  
+   }
+
   VIDEO_Configure (vmode);
 
    /*** Now configure the framebuffer. 
@@ -287,7 +351,7 @@ InitGCVideo ()
   VIDEO_SetPreRetraceCallback(copy_to_xfb);
 
   /*** Get the PAD status updated by libogc ***/
-  VIDEO_SetPostRetraceCallback(PAD_ScanPads);
+  VIDEO_SetPostRetraceCallback(ProperScanPADS);
   VIDEO_SetBlack (FALSE);
   
   /*** Update the video for next vblank ***/
@@ -297,19 +361,21 @@ InitGCVideo ()
   if (vmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
 
   genpal ();
-  DVD_Init ();
-  SDCARD_Init ();
 
+#ifdef HW_RVL
+  WPAD_Init();
+  WPAD_SetIdleTimeout(60);
+  WPAD_SetDataFormat(WPAD_CHAN_ALL,WPAD_FMT_BTNS_ACC_IR);
+  WPAD_SetVRes(WPAD_CHAN_ALL,640,480);
+#endif
+  
+  fatInitDefault();
   unpackBackdrop ();
   init_font();
   copynow = GX_FALSE;
   StartGX ();
   InitVideoThread ();
 
-  /* Wii drive detection for 4.7Gb support */
-  int driveid = dvd_inquiry();
-  if ((driveid == 4) || (driveid == 6) || (driveid == 8)) isWII = 0;
-  else isWII = 1;
 }
 
 /****************************************************************************

@@ -47,7 +47,7 @@ static unsigned char fontWork[ 0x20000 ] __attribute__((aligned(32)));
 static unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
 extern unsigned int *xfb[2];
 extern int whichfb;
-
+extern u16 getMenuButtons(void);
 /****************************************************************************
  * YAY0 Decoding
  ****************************************************************************/
@@ -145,16 +145,42 @@ void untile(unsigned char *dst, unsigned char *src, int xres, int yres)
 int font_offset[256], font_size[256], fheight;
 extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
+/* lowlevel Qoob Modchip disable (code from emukiddid) */
+#ifndef HW_RVL
+void ipl_set_config(unsigned char c)
+{
+        volatile unsigned long* exi = (volatile unsigned long*)0xCC006800;
+        unsigned long val,addr;
+        addr=0xc0000000;
+        val = c << 24;
+        exi[0] = ((((exi[0]) & 0x405) | 256) | 48);     //select IPL
+        //write addr of IPL
+        exi[0 * 5 + 4] = addr;
+        exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
+        while (exi[0 * 5 + 3] & 1);
+        //write the ipl we want to send
+        exi[0 * 5 + 4] = val;
+        exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
+        while (exi[0 * 5 + 3] & 1);
+        exi[0] &= 0x405;        //deselect IPL
+}
+#endif
+
+
 void init_font(void)
 {
-	int i;
+        int i;
+  
+        /* read font from IPL ROM */
+        //memcpy(&fontFont, &iplfont, sizeof(iplfont));
+        memset(fontFont,0,0x3000);
+#ifndef HW_RVL
+  ipl_set_config(6);
+#endif
+        __SYS_ReadROM((unsigned char *)&fontFont,0x3000,0x1FCF00);
 
-	__SYS_ReadROM((unsigned char *)&fontFont,0x3000,0x1FCF00);
 	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
-	FONT_HEADER *fnt;
-
-	fnt = ( FONT_HEADER * )&fontWork;
-
+        FONT_HEADER *fnt = ( FONT_HEADER * )&fontWork;
 	untile((unsigned char*)&fontFont, (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
 
 	for (i=0; i<256; ++i)
@@ -234,24 +260,24 @@ void blit_char(int x, int y, unsigned char c, unsigned int *lookup)
 	}
 }
 
-void write_font(int x, int y, const unsigned char *string)
+void write_font(int x, int y, char *string)
 {
 	int ox = x;
 	while (*string && (x < (ox + back_framewidth)))
 	{
 		blit_char(x, y, *string, blit_lookup);
-		x += font_size[*string];
+		x += font_size[(u8)*string];
 		string++;
 	}
 }
 
-void writex(int x, int y, int sx, int sy, const unsigned char *string, unsigned int *lookup)
+void writex(int x, int y, int sx, int sy, char *string, unsigned int *lookup)
 {
 	int ox = x;
 	while ((*string) && ((x) < (ox + sx)))
 	{
 		blit_char(x, y, *string, lookup);
-		x += font_size[*string];
+		x += font_size[(u8)*string];
 		string++;
 	}
 	
@@ -263,19 +289,19 @@ void writex(int x, int y, int sx, int sy, const unsigned char *string, unsigned 
 	}
 }
 
-void WriteCentre( int y, const unsigned char *string)
+void WriteCentre( int y, char *string)
 {
 	int x, t;
-	for (x=t=0; t<strlen(string); t++) x += font_size[string[t]];
+	for (x=t=0; t<strlen(string); t++) x += font_size[(u8)string[t]];
 	if (x>back_framewidth) x=back_framewidth;
 	x = (640 - x) >> 1;
 	write_font(x, y, string);
 }
 
-void WriteCentre_HL( int y, const unsigned char *string)
+void WriteCentre_HL( int y, char *string)
 {
 	int x,t,h;
-    for (x=t=0; t<strlen(string); t++) x += font_size[string[t]];
+    for (x=t=0; t<strlen(string); t++) x += font_size[(u8)string[t]];
 	if (x>back_framewidth) x = back_framewidth;
 	h = x;
 	x = (640 - x) >> 1;
@@ -339,23 +365,6 @@ void ClearScreen ()
   back_framewidth = 440;
 }
 
-void WaitPrompt (char *msg)
-{
-  int quit = 0;
-
-  if (SILENT) return;
-
-  while (PAD_ButtonsDown(0) & PAD_BUTTON_A) {};
-  while (!(PAD_ButtonsDown(0) & PAD_BUTTON_A) && (quit == 0))
-  {
-      ClearScreen();
-      WriteCentre(254, msg);
-      WriteCentre(254 + fheight, "Press A to Continue");
-      SetScreen();
-      while (!(PAD_ButtonsDown(0) & PAD_BUTTON_A));
-  }
-}
-
 void ShowAction (char *msg)
 {
   if (SILENT) return;
@@ -367,9 +376,36 @@ void ShowAction (char *msg)
 
 void WaitButtonA ()
 {
-  while (PAD_ButtonsDown(0) & PAD_BUTTON_A) {};
-  while (!(PAD_ButtonsDown(0) & PAD_BUTTON_A));
+  s16 p = getMenuButtons();
+  while (p & PAD_BUTTON_A)    p = getMenuButtons();
+  while (!(p & PAD_BUTTON_A)) p = getMenuButtons();
 }
+
+void WaitPrompt (char *msg)
+{
+  if (SILENT) return;
+
+  ClearScreen();
+  WriteCentre(254, msg);
+  WriteCentre(254 + fheight, "Press A to Continue");
+  SetScreen();
+  WaitButtonA ();
+}
+
+void WaitWKF()
+{
+     int ypos = 200;
+
+     ClearScreen();
+
+     WriteCentre (ypos, "WKF Detected");
+     ypos += fheight;
+     WriteCentre (ypos, "Remove SD CARD to enable Flatmode");
+     WriteCentre(254 + fheight, "Press A to Continue");
+     SetScreen();
+     WaitButtonA ();
+}
+
 
 /****************************************************************************
  * Unpack Backdrop
@@ -383,7 +419,7 @@ void unpackBackdrop ()
 
   inbytes = neoback_COMPRESSED;
   outbytes = neoback_RAW;
-  res = uncompress ((char *) &backdrop[0], &outbytes, (char *) &neoback[0], inbytes);
+    res = uncompress ((Bytef *) &backdrop, &outbytes, (Bytef *) &neoback[0], inbytes);
   if (res != Z_OK) while (1);
 }
 

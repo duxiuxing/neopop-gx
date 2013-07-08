@@ -51,8 +51,8 @@ void
 system_VBL ()
 {
   update_video ();
-  //system_sound_update();
-  //update_audio();
+//  system_sound_update();
+//  update_audio();
   system_update_input ();
 }
 
@@ -76,7 +76,7 @@ main (int argc, char *argv[])
   neosize = 0;
 
   while (!neosize) MainMenu ();
-  
+
   rom.length = neosize;
   rom.data = neorom;
   rom_loaded ();
@@ -84,12 +84,11 @@ main (int argc, char *argv[])
   bios_install ();
   InitGCAudio ();
   update_audio ();
-
   /**
    * Emulation loop
    */
   while (1)
-  {
+  {  
 	if (ConfigRequested)
 	{
 		MainMenu ();

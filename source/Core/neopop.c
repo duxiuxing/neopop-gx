@@ -64,8 +64,9 @@ COLOURMODE system_colour;
 _u8 frameskip_count;
 
 //=============================================================================
-
+#ifdef NEOPOP_DEBUG
 static BOOL debug_abort_instruction = FALSE;
+#endif
 void __cdecl instruction_error(char* vaMessage,...)
 {
 	char message[1000];

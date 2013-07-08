@@ -18,6 +18,9 @@
  ***************************************************************************/
 
 extern int dvd_read (void *dst, unsigned int len, u64 offset);
-extern void uselessinquiry ();
 extern void dvd_motor_off ();
-extern int dvd_inquiry();
+
+#ifndef HW_RVL
+extern void uselessinquiry ();
+extern void dvd_inquiry();
+#endif

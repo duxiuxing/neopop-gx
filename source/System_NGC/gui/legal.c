@@ -37,7 +37,8 @@ int dkunpack ()
   inbytes = dkpro_COMPRESSED;
   outbytes = dkpro_RAW;
   dkproraw = malloc (dkpro_RAW + 16);
-  res = uncompress ((char *) dkproraw, &outbytes, (char *) &dkpro[0], inbytes);
+//  res = uncompress ((char *) dkproraw, &outbytes, (char *) &dkpro[0], inbytes);
+  res = uncompress ((Bytef *) dkproraw, &outbytes, (Bytef *) &dkpro[0], inbytes);
   if (res == Z_OK) return 1;
   free (dkproraw);
   return 0;

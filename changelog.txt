@@ -3,6 +3,71 @@ NeoPop
 
 CHANGELOG:
 
+07/07/2013: ( Official Version 0.71.2 release - megalomaniac)
+-----------
+[NGC]
+- WKF support added
+   . load roms from FAT formatted SD card in WKF slot
+   . WKF Flatmode detection added for users with DVD + WKF.
+   ... If WKF is not in Flatmode message prompt will be displayed to remove WKF SD card
+   . Savestate/SRAM manager can save and load from MEMCARD or SD GECKO ( SD:/gnuboy/saves/ )
+
+[NGC/Wii]
+- IDE-EXI support added
+   . load roms from HDD
+   . roms location (  IDE:/gnuboy/roms/  )
+   . SlotA or SlotB autodetection
+   . write support not yet added, save files and progress to SD or MEMCARD
+
+[Wii]
+- Native Wii dol (no need to boot into GC mode)
+- USB Support added
+- DVD support added for ISO9660 discs
+- Wiimote, Nunchuck, and Classic Controller support added
+
+
+Previous Unofficial Version release code changes updated into official SVN. Thanks Eke-Eke
+Thanks emu_kidid for borrowed swiss WKF & IDE-EXI code
+
+note about release version to avoid confusion:
+  the last official release from eke-eke was dated 20/07/2007
+  this was also the version release number v 070720 (date backwards)
+  since this port is based on neopopUK SDL release version 0.71 and also
+  since this is my second release of this emulator v.2, then put both numbers together:
+  neopopUK v0.71
+  GC/Wii   v   0.2
+  -----------------
+  equals   v0.71.2
+  moving forward i request all official SVN releases follow this format.
+  Thanks, megalomaniac
+   
+   
+   
+03/05/2013: ( Unofficial Version 0.1 NGC release - megalomaniac)
+-----------
+[NGC]
+- Various code changes to fix compiler errors and supress "most" compiler warnings
+- Fixed / Updated code for compiling against latest resources (devkitPPC r26 and libogc 1.8.11.1)
+- Minor Audio Rewrite:
+   . "Glitchy" Audio introduced due to latest devkitppc/libogc incompatibility
+   . removed original audio threading code to fix the issue
+- SDHC support
+- Added / Fixed rom loading  ( title will now automatically begin after selecting )
+- Added Automatic TV mode detection (based on GC IPL version)
+- Added Progressive Video display / Component cable auto detect. Supported video types:
+   . 480i/480p
+   . 576i/576p << need feedback to confirm if any issues with PAL video mode (slowdowns or audio)
+- Added Safemode Menu display:
+   . Force Menu to display 480i video with Digital Component cable (CRT SDTV compatibility)
+   . Hold L TRIGGER during bootup to activate
+- Added IPL font fix for Qoob moodchip
+- Menu enhancements:
+   . Fixed Menu to correctly display "Stop DVD Motor" option
+   . Added aspect/scale "default" option ( restore to default settings )
+   . SAVESTATE MANAGER moved to EMULATOR OPTIONS menu
+   . Startup "Credits" moved to EMULATOR OPTIONS menu
+
+
 20/07/2007(eke-eke):
 
 - added 4.7GB DVD support for WII drives (the maximal allowed size for Gamecube DVD is still 1.35GB)

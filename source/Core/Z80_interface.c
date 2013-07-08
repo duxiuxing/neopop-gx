@@ -177,30 +177,37 @@ char* Z80_disassemble(_u16* pc_in)
 	char instr[64];	//Print the disassembled instruction to this string
 	_u8 str[80];
 	memset(str, 0, 80);
-	
+
 	//Add the program counter
-	sprintf(str, "<z80> %03X: ", pc);
+//	sprintf(str, "<z80> %03X: ", pc);
+	sprintf((char*)str, "<z80> %03X: ", pc);
 
 	//Disassemble instruction
     bcnt = DAsm(instr,ram + 0x7000 + pc);
 
 	//Add the instruction
-	strcat(str, instr);
+//	strcat(str, instr);    
+	strcat((char*)str, instr);
 
 	//Add the bytes used
-	for (i = strlen(str); i < 32; i++)
+//	for (i = strlen(str); i < 32; i++)
+	for (i = strlen((const char*)str); i < 32; i++)
 		str[i] = ' ';
 	str[32] = '\"';
 	for (i = 0; i < bcnt; i++)
 	{
 		_u8 tmp[80];
-		sprintf(tmp, "%02X ", *(ram + 0x7000 + pc + i));
-		strcat(str, tmp);
+//		sprintf(tmp, "%02X ", *(ram + 0x7000 + pc + i));
+//		strcat(str, tmp);
+		sprintf((char*)tmp, "%02X ", *(ram + 0x7000 + pc + i));
+		strcat((char*)str, (const char*)tmp);
 	}
-	str[strlen(str) - 1] = '\"';
+//	str[strlen(str) - 1] = '\"';
+	str[strlen((const char *)str) - 1] = '\"';
 
 	*pc_in = pc + bcnt;
-	return strdup(str);
+//	return strdup(str);
+	return strdup((const char *)str);
 }
 
 //=============================================================================

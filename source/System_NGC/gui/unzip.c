@@ -20,9 +20,8 @@
 #include <zlib.h>
 #include <dvd.h>
 #include <font.h>
-#include <sdcard.h>
 
-extern sd_file *filehandle;
+extern FILE *filehandle;
 extern u8 UseSDCARD;
 
  /*
@@ -118,8 +117,8 @@ UnZipBuffer (unsigned char *outbuffer, u64 discoffset, int length)
 	/*** Read Zip Header ***/
   if ( UseSDCARD )
   {
-	SDCARD_SeekFile(filehandle, 0, SDCARD_SEEK_SET);
-	SDCARD_ReadFile(filehandle, &readbuffer, 2048);
+        fseek(filehandle, 0, SEEK_SET);
+        fread(readbuffer, 1, 2048, filehandle);
   }
   else
 	dvd_read (&readbuffer, 2048, discoffset);
@@ -144,9 +143,7 @@ UnZipBuffer (unsigned char *outbuffer, u64 discoffset, int length)
     return 0;
 
 	/*** Set ZipChunk for first pass ***/
-  zipoffset =
-    (sizeof (PKZIPHEADER) + FLIP16 (pkzip.filenameLength) +
-     FLIP16 (pkzip.extraDataLength));
+  zipoffset = (sizeof (PKZIPHEADER) + FLIP16 (pkzip.filenameLength) + FLIP16 (pkzip.extraDataLength));
   zipchunk = ZIPCHUNK - zipoffset;
 
 	/*** Now do it! ***/
@@ -184,19 +181,16 @@ UnZipBuffer (unsigned char *outbuffer, u64 discoffset, int length)
       zipoffset = 0;
       zipchunk = ZIPCHUNK;
       discoffset += 2048;
-      
-	  if ( UseSDCARD )
-		  SDCARD_ReadFile(filehandle, &readbuffer, 2048);
-	  else
-		dvd_read (&readbuffer, 2048, discoffset);
+
+          if ( UseSDCARD ) fread(readbuffer, 1, 2048, filehandle);
+	  else dvd_read (&readbuffer, 2048, discoffset);
 
     }
   while (res != Z_STREAM_END);
 
   inflateEnd (&zs);
 
-  if ( UseSDCARD )
-	  SDCARD_CloseFile(filehandle);
+  if ( UseSDCARD ) fclose(filehandle);
   
   if (res == Z_STREAM_END)
     {

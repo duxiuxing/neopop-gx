@@ -17,7 +17,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 #include <neopop.h>
-#include <ogcsys.h>
+//#include <ogcsys.h>
 
 extern int ConfigRequested;
 
@@ -26,18 +26,18 @@ extern int ConfigRequested;
  ****************************************************************************/
 #define ABSIZE 3216 * 2
 unsigned char soundbuffer[2][ABSIZE] __attribute__ ((__aligned__ (32)));
-int buffsize[2] = { 0, 0 };
+//int buffsize[2] = { 0, 0 };
 int whichab = 0;
-int IsPlaying = 0;
+//int IsPlaying = 0;
 int IsMixing = 0;
 
 #define AUDIOSTACK 16384
-lwpq_t audioqueue;
-lwp_t athread;
+//lwpq_t audioqueue;
+//lwp_t athread;
 static unsigned char astack[AUDIOSTACK];
 
 void system_sound_update ();
-
+/*
 static void *
 AudioThread (void *arg)
 {
@@ -48,8 +48,9 @@ AudioThread (void *arg)
       system_sound_update ();
       LWP_SuspendThread (athread);
     }
+    return 0;
 }
-
+*/
 /****************************************************************************
  * AudioSwitchBuffers
  *
@@ -62,13 +63,21 @@ AudioThread (void *arg)
 static void
 AudioSwitchBuffers ()
 {
-  AUDIO_StopDMA ();
-  AUDIO_InitDMA ((u32) soundbuffer[whichab], ABSIZE);
+// AUDIO_StopDMA ();
+// AUDIO_InitDMA ((u32) soundbuffer[whichab], ABSIZE);
+      whichab ^= 1;
+      memset (&soundbuffer[whichab], 0, ABSIZE);
+      memset(&astack, 0, AUDIOSTACK);
+      system_sound_update ();
+      AUDIO_InitDMA ((u32) soundbuffer[whichab], ABSIZE);
   DCFlushRange (&soundbuffer[whichab], ABSIZE);
   AUDIO_StartDMA ();
-
-  if (LWP_ThreadIsSuspended (athread))
-    LWP_ResumeThread (athread);
+  
+//  whichab ^= 1;  
+//  IsPlaying = 1;   
+//system_sound_update ();
+//  if (LWP_ThreadIsSuspended (athread))
+//    LWP_ResumeThread (athread);
 }
 
 /****************************************************************************
@@ -84,8 +93,8 @@ InitGCAudio ()
   AUDIO_SetDSPSampleRate (AI_SAMPLERATE_48KHZ);
   AUDIO_RegisterDMACallback (AudioSwitchBuffers);
 
-  LWP_InitQueue (&audioqueue);
-  LWP_CreateThread (&athread, AudioThread, NULL, astack, AUDIOSTACK, 80);
+//  LWP_InitQueue (&audioqueue);
+//  LWP_CreateThread (&athread, AudioThread, NULL, astack, AUDIOSTACK, 80);
 
 }
 
@@ -131,7 +140,8 @@ void
 system_sound_update ()
 {
   int count;
-  char *bufc;
+//char *bufc;
+  unsigned char *bufc;
   unsigned short *src;
   unsigned short *dst;
   unsigned char m;
@@ -151,14 +161,16 @@ system_sound_update ()
 	/**
 	 * Step Two. Get 8bit Mono DAC samples
 	 */
-  dac_update ((char *) &dacbuffer, DACSAMPLES);
+//dac_update ((char *) &dacbuffer, DACSAMPLES);
+  dac_update ((unsigned char *) &dacbuffer, DACSAMPLES);
 
 	/**
 	 * Step Three. Mix these samples.
 	 */
   count = DACSAMPLES;
   bufc = (unsigned char *) &dacbuffer;
-  dst = (signed short *) &psgbuffer;
+//dst = (signed short *) &psgbuffer;
+  dst = (unsigned short *) &psgbuffer;
   while (count)
     {
       m = *bufc++;

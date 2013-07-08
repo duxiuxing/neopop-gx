@@ -33,10 +33,20 @@
  *  these functions.
  ***************************************************************************/
 #include "neopop.h"
+#include "font.h"
+#include "wkf.h"
 
- /** DVD I/O Address base **/
-volatile unsigned long *dvd = (volatile unsigned long *) 0xCC006000;
-static unsigned char *inquiry=(unsigned char *)0x80000004;
+#ifdef HW_RVL
+#include "di/di.h"
+#endif
+
+#ifndef HW_RVL
+static u64 DvdMaxOffset = 0x57057C00;                                 /* 1.4 GB max. by default */
+volatile unsigned long *dvd = (volatile unsigned long *) 0xCC006000;  /* DVD I/O Address base */
+static unsigned char *inquiry=(unsigned char *)0x80000004;            /* pointer to drive ID */
+#else
+static u64 DvdMaxOffset = 0x118244F00LL;                              /* 4.7 GB max. */
+#endif
 
  /** Due to lack of memory, we'll use this little 2k keyhole for all DVD operations **/
 unsigned char DVDreadbuffer[2048] ATTRIBUTE_ALIGN (32);
@@ -46,36 +56,76 @@ unsigned char DVDreadbuffer[2048] ATTRIBUTE_ALIGN (32);
   *
  * Read DVD disc sectors
   ***************************************************************************/
-extern u8 isWII;
-
 int dvd_read (void *dst, unsigned int len, u64 offset)
 {
-  unsigned char *buffer = (unsigned char *) (unsigned int) DVDreadbuffer;
   
-  if (len > 2048) return 1; /*** We only allow 2k reads **/
-  DCInvalidateRange((void *)buffer, len);
-
-  if(offset < 0x57057C00 || (isWII == 1 && offset < 0x118244F00LL)) // don't read past the end of the DVD
+  if (len > 2048) return 1;      /*** We only allow 2k reads **/
+  if(offset < DvdMaxOffset)      /*** Let's not read past end of DVD ***/
   {
-      offset >>= 2;
+     unsigned char *buffer = (unsigned char *) (unsigned int) DVDreadbuffer;
+     DCInvalidateRange((void *)buffer, len);
+
+#ifndef HW_RVL
       dvd[0] = 0x2E;
       dvd[1] = 0;
       dvd[2] = 0xA8000000;
-	  dvd[3] = (u32)offset;
+      dvd[3] = (u32)(offset >> 2);
       dvd[4] = len;
       dvd[5] = (unsigned long) buffer;
       dvd[6] = len;
-      dvd[7] = 3; /*** Enable reading with DMA ***/
-      while (dvd[7] & 1);
-      memcpy (dst, buffer, len);
+      dvd[7] = 3;
+      
+    /*** Enable reading with DMA ***/
+    while (dvd[7] & 1);
+
+    /*** Ensure it has completed ***/
+    if (dvd[0] & 0x4) return 0;
+      
+#else
+    if (DI_ReadDVD(buffer, len >> 11, (u32)(offset >> 11))) return 0;
+#endif
+    memcpy (dst, buffer, len);
+    return 1;
   }
-  else return 0; // Let's not read past end of DVD
-   
-  if (dvd[0] & 0x4) return 0; /* Ensure it has completed */
-  
-  return 1;
+
+  return 0; 
 }
 
+/****************************************************************************
+ * dvd_motor_off
+ *
+ * Stop the DVD Motor
+ *
+ * This can be used to prevent the Disc from spinning during playtime
+ ****************************************************************************/
+void dvd_motor_off( )
+{
+  
+  ShowAction("Stopping DVD drive...");
+
+#ifdef HW_RVL
+  DI_StopMotor();
+#else
+
+  dvd[0] = 0x2e;
+  dvd[1] = 0;
+  dvd[2] = 0xe3000000;
+  dvd[3] = 0;
+  dvd[4] = 0;
+  dvd[5] = 0;
+  dvd[6] = 0;
+  dvd[7] = 1; // Do immediate
+  while (dvd[7] & 1);
+
+  /*** PSO Stops blackscreen at reload ***/
+  dvd[0] = 0x14;
+  dvd[1] = 0;
+
+#endif
+}
+
+
+#ifndef HW_RVL
 /****************************************************************************
  * uselessinquiry
  *
@@ -101,39 +151,15 @@ void uselessinquiry ()
 }
 
 /****************************************************************************
- * dvd_motor_off
- *
- * Stop the DVD Motor
- *
- * This can be used to prevent the Disc from spinning during playtime
- ****************************************************************************/
-void dvd_motor_off( )
-{
-	dvd[0] = 0x2e;
-	dvd[1] = 0;
-	dvd[2] = 0xe3000000;
-	dvd[3] = 0;
-	dvd[4] = 0;
-	dvd[5] = 0;
-	dvd[6] = 0;
-	dvd[7] = 1; // Do immediate
-	while (dvd[7] & 1);
-
-	/*** PSO Stops blackscreen at reload ***/
-	dvd[0] = 0x14;
-	dvd[1] = 0;
-}
-
-/****************************************************************************
  * dvd_inquiry
  *
  * Return the Current DVD Drive ID
  *
  * This can be used to determine whereas the console is a Gamecube or a Wii
  ****************************************************************************/
-int dvd_inquiry()
+void dvd_inquiry()
 {
-	dvd[0] = 0x2e;
+    dvd[0] = 0x2e;
     dvd[1] = 0;
     dvd[2] = 0x12000000;
     dvd[3] = 0;
@@ -143,5 +169,19 @@ int dvd_inquiry()
     dvd[7] = 3;
     while( dvd[7] & 1 );
     DCFlushRange((void *)0x80000000, 32);
-	return (int)inquiry[2];
+    
+      int driveid = (int)inquiry[2];
+  
+  if ((driveid == 4) || (driveid == 6) || (driveid == 8))
+  {
+      // do nothing just leave
+  }
+  else if  ((driveid == 2) && (__wkfSpiReadId() != 0 && __wkfSpiReadId() != 0xFFFFFFFF) && (wkfIsInserted(0) == true) )
+  {
+     WaitWKF();
+     __wkfReset();
+     dvd_inquiry();
+  }
+
 }
+#endif

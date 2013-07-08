@@ -25,9 +25,9 @@
  *****************************************************************************/
 
 extern void init_font(void);
-extern void WriteCentre_HL( int y, const unsigned char *string);
-extern void WriteCentre (int y, const unsigned char *text);
-extern void write_font (int x, int y, const unsigned char *text);
+extern void WriteCentre_HL( int y, char *string);
+extern void WriteCentre (int y, char *text);
+extern void write_font (int x, int y, char *text);
 extern void WaitPrompt (char *msg);
 extern void ShowAction (char *msg);
 extern void WaitButtonA ();
@@ -39,3 +39,6 @@ extern void setfontcolour (int fcolour);
 extern int fheight;
 extern int font_size[256];
 extern u16 back_framewidth;
+
+extern void WaitWKF();
+

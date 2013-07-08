@@ -16,12 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
-#include <sdcard.h>
 #include "neopop.h"
 #include "state.h"
 #include "dvd.h"
 #include "font.h"
 #include "saveicon.h"	/*** Nice little icon - thanks brakken! ***/
+
 
 /* Support for MemCards  */
 /**
@@ -54,18 +54,18 @@ extern int use_SDCARD;
  *****************************************************************************/
 int SD_ManageFile(char *filename, int direction)
 {
-    char name[1024];
-	sd_file *handle;
-    int len = 0;
-    int offset = 0;
-	int filesize;
-	
-	/* build complete SDCARD filename */
-	sprintf (name, "dev%d:\\neopop\\saves\\%s", CARDSLOT, filename);
+   char name[1024];
+   FILE *handle;
+   int len = 0;
+   int offset = 0;
+   int filesize;
 
-	/* open file */
-	handle = direction ? SDCARD_OpenFile (name, "rb") :
-						 SDCARD_OpenFile (name, "wb");
+   // build complete SDCARD filename
+   sprintf (name, "/neopop/saves/%s", filename);
+
+   // open file
+   handle = direction ? fopen(name, "rb") : fopen(name, "wb");
+
 
 	if (handle == NULL)
 	{
@@ -76,11 +76,10 @@ int SD_ManageFile(char *filename, int direction)
 	
 	switch (direction)
 	{
-		case 0: /* SAVING */
-
+		case 0: // SAVING
 			filesize = state_store ("NEOPOP");
-			len = SDCARD_WriteFile (handle, savebuffer, filesize);
-			SDCARD_CloseFile (handle);
+                        len = fwrite(savebuffer, 1, filesize, handle);
+                        fclose(handle);
 			if (len != filesize)
 			{
 				sprintf (filename, "Error writing %s", name);
@@ -91,17 +90,16 @@ int SD_ManageFile(char *filename, int direction)
 			WaitPrompt (filename);
 			return 1;
 		
-		case 1: /* LOADING */
-		
-			while ((len = SDCARD_ReadFile (handle, &savebuffer[offset], 2048)) > 0) offset += len;
-            SDCARD_CloseFile (handle);
-			read_state_0050 ("NEOPOP");
+		case 1: // LOADING 
+                        while ((len = fread(&savebuffer[offset], 1, 2048, handle)) > 0) { offset += len; }
+                        fclose(handle);
+                        read_state_0050 ("NEOPOP");
 			sprintf (filename, "Loaded %d bytes successfully", offset);
 			WaitPrompt (filename);
 			return 1;
 	}
-	
-	return 0; 
+
+  return 0;
 }
 
 /****************************************************************************
@@ -120,7 +118,9 @@ int MountTheCard ()
 	while (tries < 10)
 	{
 		*(unsigned long *) (0xcc006800) |= 1 << 13; /*** Disable Encryption ***/
+#ifndef HW_RVL
 		uselessinquiry ();
+#endif
 		VIDEO_WaitVSync ();
 		CardError = CARD_Mount (CARDSLOT, SysArea, NULL); /*** Don't need or want a callback ***/
 		if (CardError == 0) return 1;

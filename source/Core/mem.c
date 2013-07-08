@@ -468,7 +468,8 @@ void reset_memory(void)
 		*(_u32*)(ram + 0x6C00) = htole32(0x00FF970A);	//Start
 		*(_u16*)(ram + 0x6C04) = htole16(0xFFFF);	//Catalog
 		*( _u8*)(ram + 0x6C06) = 0x00;			//Sub-Cat
-		sprintf(ram + 0x6C08, "NEOGEOPocket");	//bios rom 'Name'
+//		sprintf(ram + 0x6C08, "NEOGEOPocket");	//bios rom 'Name'
+                sprintf((char*)ram + 0x6C08, "NEOGEOPocket");	//bios rom 'Name'
 
 		*(_u8*)(ram + 0x6C58) = 0x00;			//LO-EEPROM not present
 		*(_u8*)(ram + 0x6C59) = 0x00;			//HI-EEPROM not present

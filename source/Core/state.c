@@ -159,8 +159,8 @@ int state_store(char* filename)
 	/* compress state file */
 	inbytes = sizeof(NEOPOPSTATE0050);
 	outbytes = 0x10000;
-    compress2 ((char *) &savebuffer[sizeof(outbytes)], &outbytes, (char *) &state, inbytes, 9);
-
+//    compress2 ((char *) &savebuffer[sizeof(outbytes)], &outbytes, (char *) &state, inbytes, 9);
+        compress2 ((Bytef *) &savebuffer[sizeof(outbytes)], &outbytes, (Bytef *) &state, inbytes, 9);
 	/* write compressed size in the first 32 bits for decompression */
 	memcpy(&savebuffer[0], &outbytes, sizeof(outbytes));
 
@@ -190,7 +190,8 @@ void read_state_0050(char* filename)
 
 	/* uncompress state file */
 	outbytes = sizeof(NEOPOPSTATE0050);
-    uncompress ((char *) &state, &outbytes, (char *) &savebuffer[sizeof(inbytes)], inbytes);
+//    uncompress ((char *) &state, &outbytes, (char *) &savebuffer[sizeof(inbytes)], inbytes);
+        uncompress ((Bytef *) &state, &outbytes, (Bytef *) &savebuffer[sizeof(inbytes)], inbytes);
 
 #endif
 	{
