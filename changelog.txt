@@ -3,21 +3,21 @@ NeoPop
 
 CHANGELOG:
 
-07/07/2013: ( Official Version 0.71.2 release - megalomaniac)
+07/15/2013: ( Official Version 0.71.2 release - megalomaniac)
 -----------
 [NGC]
 - WKF support added
    . load roms from FAT formatted SD card in WKF slot
    . WKF Flatmode detection added for users with DVD + WKF.
    ... If WKF is not in Flatmode message prompt will be displayed to remove WKF SD card
-   . Savestate/SRAM manager can save and load from MEMCARD or SD GECKO ( SD:/gnuboy/saves/ )
+   . Savestate/SRAM manager can save and load from MEMCARD or SD GECKO ( SD:/neopop/saves/ )
 
 [NGC/Wii]
 - IDE-EXI support added
    . load roms from HDD
-   . roms location (  IDE:/gnuboy/roms/  )
+   . roms location (  IDE:/neopop/roms/  )
    . SlotA or SlotB autodetection
-   . write support not yet added, save files and progress to SD or MEMCARD
+   . write support not yet added, save files and progress to MEMCARD or SD GECKO
 
 [Wii]
 - Native Wii dol (no need to boot into GC mode)
