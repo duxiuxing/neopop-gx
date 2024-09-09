@@ -27,7 +27,7 @@
 /**
  * libOGC System Work Area
  */
-static u8 SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
+static u8 SysArea[CARD_WORKAREA_SIZE] ATTRIBUTE_ALIGN (32);
 
 /**
  * DMA Transfer Area.
@@ -193,7 +193,7 @@ int ManageState (int direction)
   outbytes = (2048 + 64 + state_size);
 
   /*** Initialise the CARD system ***/
-  memset (&SysArea, 0, CARD_WORKAREA);
+  memset (&SysArea, 0, CARD_WORKAREA_SIZE);
   CARD_Init ("NEOP", "00");
 
   /*** Attempt to mount the card ***/
