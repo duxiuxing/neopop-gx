@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
   <name>NeoPop GX</name>
-  <coder>Eke-Eke</coder>
+  <coder>Eke-Eke and R-Sam</coder>
   <version>0.71.2</version>
-  <release_date>07/07/2013</release_date>
+  <release_date>09/09/2013</release_date>
   <short_description>Neo Geo Pocket Color Emulator</short_description>
   <long_description>Emulator updated by megalomaniac.
 
@@ -12,4 +12,3 @@ Please read changelog.txt for list of changes.
 Visit http://www.gc-forever.com for any questions and updates.</long_description>
   <no_ios_reload/>
 </app>
-

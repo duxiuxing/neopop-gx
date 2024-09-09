@@ -31,8 +31,9 @@ jobs:
         touch dist/roms/NEOPOCKET/put-ngp-or-ngc-files-here
         mkdir -p dist/neopop/saves
         touch dist/neopop/saves/app-load-or-save-game-state-from-here
-        cp neopop/* dist/apps/neopop/
-        cp neopop_wii.dol dist/apps/genplus-gx/boot.dol
+        cp neopop/icon.png dist/apps/neopop/
+        cp neopop/meta.xml dist/apps/neopop/
+        cp neopop_wii.dol dist/apps/neopop/boot.dol
 
     - name: Upload Wii artifacts
       uses: actions/upload-artifact@v4
