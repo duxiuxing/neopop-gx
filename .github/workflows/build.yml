@@ -1,0 +1,61 @@
+name: Genesis Plus GX Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # image: ["Wii", "GameCube"]
+        image: ["Wii"] # only for Wii
+    container: devkitpro/devkitppc:latest
+ 
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Build Wii
+      if: ${{ matrix.image == 'Wii' }}
+      run: |
+        make -f Makefile.wii -j1
+    
+    - name: Copy Wii artifacts
+      if: ${{ matrix.image == 'Wii' }}
+      run: | 
+        mkdir dist/apps/neopop
+        mkdir dist/neopop/roms
+        touch dist/neopop/roms/put-ngp-or-ngc-files-here
+        mkdir dist/neopop/saves
+        touch dist/neopop/saves/app-load-or-save-game-state-from-here
+        cp neopop/* dist/apps/neopop/
+        cp neopop_wii.dol dist/apps/genplus-gx/boot.dol
+
+    - name: Upload Wii artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.image == 'Wii' }}
+      with: 
+        name: NeoPop-GX-Wii
+        path: |
+         dist/
+    
+    - name: Build GameCube
+      if: ${{ matrix.image == 'GameCube' }}
+      run: |
+        make -f Makefile.gc -j1
+        
+    - name: Copy GameCube artifact
+      if: ${{ matrix.image == 'GameCube' }}
+      run: |
+        cp neopop_cube.dol dist/
+    
+    - name: Upload GameCube artifact
+      uses: actions/upload-artifact@v4
+      if: ${{ matrix.image == 'GameCube' }}
+      with: 
+        name: NeoPop-GX-GameCube
+        path: |
+         dist/
