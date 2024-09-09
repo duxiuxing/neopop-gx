@@ -214,7 +214,7 @@ void displaymenu ()
 *
 ****************************************************************************/
 int CARDSLOT = CARD_SLOTA;
-int use_SDCARD = 0;
+int use_SDCARD = 1;
 extern int ManageState (int direction);
 
 int statemenu ()

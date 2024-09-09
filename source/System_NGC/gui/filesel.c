@@ -32,6 +32,9 @@
 #include "di/di.h"
 #endif
 
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024
+#endif
 #define PAGESIZE 12
 
 static int fat_type   = 0;
@@ -111,7 +114,13 @@ int updateSDdirname()
   } 
 }
 
-
+int stricmp(const char* a, const char* b)
+{
+    for (; tolower(*a) == tolower(*b); a += 1, b += 1)
+        if (*a == '\0')
+            return 0;
+    return tolower(*a) - tolower(*b);
+}
 /***************************************************************************
 * FileSortCallback
 *

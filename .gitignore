@@ -1,1 +1,4 @@
-build/
+/build/
+
+/neopop_wii.dol
+/neopop_wii.elf
