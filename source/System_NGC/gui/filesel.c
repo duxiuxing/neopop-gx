@@ -482,16 +482,16 @@ int OpenSD (int type)
      havedir = 0;                                          // don't mess with DVD entries
      old_selection = selection = offset = old_offset = 0;  // reinit selector
 
-     sprintf (rootFATdir, "%s/neopop/roms/",root);                 // Reset SD root directory
+     sprintf (rootFATdir, "%s/roms/NEOPOCKET/", root);     // Reset SD root directory
 
-     DIR* dir = opendir(rootFATdir);                        // if directory doesn't exist use root as default
-     if (dir == NULL) sprintf (rootFATdir, "%s/",root);
+     DIR* dir = opendir(rootFATdir);                       // if directory doesn't exist use root as default
+     if (dir == NULL) sprintf (rootFATdir, "%s/", root);
      else closedir(dir);
 
      ShowAction ("Reading Directory ...");                 // Parse initial root directory and get entries list
      if ((maxfiles = parseSDdirectory ())) {
         FileSelector ();                                   // Select an entry
-        haveFATdir = 1;                                     // set entries list for next access
+        haveFATdir = 1;                                    // set entries list for next access
      }
      else {
         WaitPrompt ("No Entries Found !!");
