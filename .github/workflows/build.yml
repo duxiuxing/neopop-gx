@@ -1,4 +1,4 @@
-name: Genesis Plus GX Build
+name: NeoPop GX Build
 
 on: [push, pull_request]
 
