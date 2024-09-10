@@ -482,7 +482,7 @@ int OpenSD (int type)
      havedir = 0;                                          // don't mess with DVD entries
      old_selection = selection = offset = old_offset = 0;  // reinit selector
 
-     sprintf (rootFATdir, "%s/roms/NGPC/", root);     // Reset SD root directory
+     sprintf (rootFATdir, "%s/roms/NGP/", root);     // Reset SD root directory
 
      DIR* dir = opendir(rootFATdir);                       // if directory doesn't exist use root as default
      if (dir == NULL) sprintf (rootFATdir, "%s/", root);

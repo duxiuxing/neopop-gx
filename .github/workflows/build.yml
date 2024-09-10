@@ -27,8 +27,8 @@ jobs:
       if: ${{ matrix.image == 'Wii' }}
       run: |
         mkdir -p dist/apps/neopop
-        mkdir -p dist/roms/NGPC
-        touch dist/roms/NGPC/put-ngp-or-ngc-files-here
+        mkdir -p dist/roms/NGP
+        touch dist/roms/NGP/put-ngp-or-ngc-files-here
         mkdir -p dist/neopop/saves
         touch dist/neopop/saves/app-load-or-save-game-state-from-here
         cp neopop/icon.png dist/apps/neopop/
